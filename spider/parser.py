@@ -93,11 +93,76 @@ class GoogleParser(SearchResultParser):
 				links.append(href.rstrip('/'))
 		self.links = links
 
+
+class BingParser(SearchResultParser):
+	''' Bing search result page parser '''
+	
+	strainer = SoupStrainer('h2')
+
+	def __init__(self, text, *args, **kwargs):
+		super(BingParser, self).__init__(*args, **kwargs)
+		self.cook_soup(text, BingParser.strainer)
+		self.extract_links()
+
+	def extract_links(self):
+		links = []
+		for h2 in self.soup.find_all('h2'):
+			# Every relevant h2 contains an anchor tag
+			anchor = h2.a
+			if anchor:
+				href = anchor['href']
+				if href.startswith('http'):
+					links.append(href.rstrip('/'))
+		self.links = links
+
+
+class YahooParser(SearchResultParser):
+	''' Yahoo search result page parser '''
+	
+	strainer = SoupStrainer('h3', attrs={'class': 'title'}) # div id=web
+#	strainer = SoupStrainer('a', attrs={'class': 'td-u'})
+
+	def __init__(self, text, *args, **kwargs):
+		super(YahooParser, self).__init__(*args, **kwargs)
+		self.cook_soup(text, YahooParser.strainer)
+		self.extract_links()
+
+	def extract_links(self):
+		links = []
+		for h3 in self.soup.find_all('h3'):
+			anchor = h3.a
+			if anchor and anchor.attrs.get('href'):
+				links.append(anchor['href'].rstrip('/'))
+		self.links = links
+
+
+class DuckDuckGoParser(SearchResultParser):
+	''' DuckDuckGo search result page parser '''
+
+#	strainer = SoupStrainer('h2', attrs={'class': 'result__title'})
+	strainer = SoupStrainer('a', attrs={'class': 'result__a'})
+
+	def __init__(self, text, *args, **kwargs):
+		super(DuckDuckGoParser, self).__init__(*args, **kwargs)
+		self.cook_soup(text, DuckDuckGoParser.strainer)
+		self.extract_links()
+
+	def extract_links(self):
+		links = []
+		for anchor in self.soup.find_all('a'):
+			if anchor.href:
+				continue
+			href = self.clean_link_from_query_string(anchor['href'], 'uddg')
+			if href:
+				links.append(href.rstrip('/'))
+		self.links = links
+
+
 # A lookup dictionary
 PARSER_LOOKUP = {
-#	'bing':       BingParser,
-#	'duckduckgo': DuckDuckGoParser,
+	'bing':       BingParser,
+	'duckduckgo': DuckDuckGoParser,
 	'google':     GoogleParser,
 	'text':       TextParser,
-#	'yahoo':      YahooParser,
+	'yahoo':      YahooParser,
 }

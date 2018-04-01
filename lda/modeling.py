@@ -21,4 +21,5 @@ def model(documents_dict):
 	
 #	from pprint import pprint
 #	pprint(results)
+	results = sorted(results, key=lambda r: int(r['topicID']))
 	return (lda_model, results)

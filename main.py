@@ -21,7 +21,7 @@ class SearchHandler(web.RequestHandler):
 				return
 		except ValueError:
 			# Error converting to int
-			n = 40
+			n = 9999
 		except Exception as e:
 			self.send_response([])
 			return

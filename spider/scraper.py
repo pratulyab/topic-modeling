@@ -5,9 +5,13 @@ from spider.parser import PARSER_LOOKUP
 from tornado import gen, httpclient, ioloop, queues, web
 from urllib.parse import quote_plus, urlparse
 from lda.modeling import model
+from clustering.cluster import run
 
 SEARCH_ENGINES = {
+	'bing'       : {'url': 'https://www.bing.com/search?q=%s&count=100'},
+	'duckduckgo' : {'url': 'https://duckduckgo.com/html?q=%s'},
 	'google'     : {'url': 'https://google.com/search?q=%s&num=100'},
+	'yahoo'      : {'url': 'https://search.yahoo.com/search?p=%s&n=100'},
 }
 
 CONCURRENCY = 10 # Num. Of Concurrent Workers
@@ -75,7 +79,7 @@ def boot(query, n=100):
 			fetching.add(url)
 			links = yield get_links_from_url(url)
 			fetched.add(url)
-#			print(len(links), 'links fetched from', url)
+			print(len(links), 'links fetched from', url)
 			for each in links:
 				if each.startswith('http'):
 					yield links_queue.put(each) # Adding to links_queue
@@ -130,4 +134,7 @@ def boot(query, n=100):
 
 	lda_model, results = model(result)
 	topics = [str(topic[1]) for topic in lda_model.show_topics(num_words=7)]
+	print("Applying Clustering...")
+	run(result) # Clustering
+	print('-- DONE --')
 	raise gen.Return({'topics': topics, 'results': results})
